@@ -1,52 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() => runApp(const VideoApp());
+
+/// Stateful widget to fetch and then display video content.
+class VideoApp extends StatefulWidget {
+  const VideoApp({super.key});
+
+  @override
+  _VideoAppState createState() => _VideoAppState();
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class _VideoAppState extends State<VideoApp> {
+  late VideoPlayerController _controller;
 
-  // This widget is the root of your application.
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.networkUrl(Uri.parse(
+        'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'))
+      ..initialize().then((_) {
+        // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
+        setState(() {});
+      });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+      title: 'Video Demo',
+      home: Scaffold(
+        body: Center(
+          child: _controller.value.isInitialized
+              ? AspectRatio(
+            aspectRatio: _controller.value.aspectRatio,
+            child: VideoPlayer(_controller),
+          )
+              : Container(),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            setState(() {
+              _controller.value.isPlaying
+                  ? _controller.pause()
+                  : _controller.play();
+            });
+          },
+          child: Icon(
+            _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+          ),
+
+
+
+        ),
       ),
-      home: HomeScreens()
     );
   }
-}
-
-class HomeScreens extends StatefulWidget {
-  const HomeScreens({super.key});
 
   @override
-  State<HomeScreens> createState() => _HomeScreensState();
-}
-
-class _HomeScreensState extends State<HomeScreens> {
-  @override
-  Widget build(BuildContext context) {
-    return const Placeholder();
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 }
-
